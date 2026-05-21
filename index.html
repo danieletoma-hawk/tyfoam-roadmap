@@ -555,7 +555,8 @@
           if (el) el.classList.add('is-parent');
         }
       });
-      // v2: overlay avatar Gravatar a sinistra di ogni bar
+      // v2: overlay avatar Gravatar + flag conflitto a sinistra di ogni bar.
+      // Ordine da sinistra: [avatar] [triangolo conflitto] [bar]
       visible.forEach(v => {
         const task = allTasks.find(x => x.id === v.id);
         if (!task || !task.owner) return;
@@ -567,7 +568,10 @@
         const by = parseFloat(bar.getAttribute('y')) || 0;
         const bh = parseFloat(bar.getAttribute('height')) || 20;
         const size = Math.min(bh, 20);
-        const ax = bx - size - 4;
+        const hasConflict = Array.isArray(task.conflicts) && task.conflicts.length;
+        const triSize = Math.max(14, Math.min(bh, 22));
+        const triReserved = hasConflict ? (triSize * 0.9 + 8) : 0; // larghezza triangolo + gap dx
+        const ax = bx - triReserved - size - 4;
         const ay = by + (bh - size) / 2;
         const svgNs = "http://www.w3.org/2000/svg";
         const img = document.createElementNS(svgNs, 'image');
@@ -583,9 +587,8 @@
         titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
         img.appendChild(titleEl);
         wrap.appendChild(img);
-        // Bandiera conflitto: triangolo rosso pieno, esterno a sinistra della bar, centrato vert.
-        if (Array.isArray(task.conflicts) && task.conflicts.length) {
-          const triSize = Math.max(14, Math.min(bh, 22));
+        // Bandiera conflitto: triangolo rosso pieno, esterno a sinistra della bar (dopo avatar), centrato vert.
+        if (hasConflict) {
           const gap = 6;
           // Punta destra rivolta verso bar; base sinistra verticale.
           const tipX = bx - gap;                 // punta
