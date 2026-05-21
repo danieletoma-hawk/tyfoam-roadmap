@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>TyFOAM Gantt v2 — MOCKUP multi-collab</title>
+<title>TyFOAM Gantt</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
 <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
 <style>
@@ -21,12 +21,6 @@
     background:#c62828; color:#fff; font-size:10px; font-weight:700; cursor:help;
   }
   /* Banner mockup */
-  .mockup-banner {
-    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
-    color:#fff; padding:8px 14px; border-radius:6px; margin-bottom:14px;
-    font-size:13px; border:1px solid #3a86ff;
-  }
-  .mockup-banner b { color:#ffd166; }
   body { font-family: system-ui, sans-serif; margin: 20px; background: #1e1e1e; color: #eee; }
   h1 { margin: 0 0 8px; }
   .bar-row { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
@@ -184,12 +178,7 @@
 </head>
 <body>
 
-<div class="mockup-banner">
-  <b>v2 MOCKUP</b> — multi-collab + owner avatar (Gravatar identicon, no OAuth) + cross-team conflict badges.
-  Versione originale resta su <code>roadmap.html</code>. Feedback su questo file → poi promuovo a stabile.
-</div>
-
-<h1>TyFOAM - Roadmap Gantt <span style="font-size:14px;color:#ffd166;">[v2 mockup]</span></h1>
+<h1>TyFOAM - Roadmap Gantt</h1>
 
 <div class="bar-row">
   <span class="refresh-wrap">
@@ -281,19 +270,17 @@
   "last_sync": "2026-05-19",
   "token_daily_avg_k": null,
   "owners": {
-    "daniele@tyfoam.dev":   {"name": "Daniele",  "team": "tyfoam"},
-    "lorenzo@aero-active.local":  {"name": "Lorenzo",  "team": "tyfoam"},
-    "lab@aero-active.local":      {"name": "Lab Fisica","team": "lab"}
+    "daniele@tyfoam.dev": {"name": "Daniele", "team": "tyfoam"}
   },
   "tasks": [
     {"id":"TF-001","tipo":"Verifica","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Verificare ciclo completo hard pause/resume su un case reale: pannello → pausa → reboot WSL → resume da latestTime, end-to-end","start":"2026-05-12","end":"2026-05-12","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-005","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"blocked","descrizione":"Deploy automatico unico: copiare plugin Max 2024 + 2026 + script WSL in un solo comando, eliminando drift di versione","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"block","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-021","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Portare iterazioni endTime default da 800 a 2000 mantenendo auto-stop su convergenza dei residui (< 1e-5)","start":"2026-05-12","end":"2026-05-13","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-022","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"open","descrizione":"Fix thin-feature collapse in snappyHexMesh: garantire che shell e condotti sottili non vengano collassati dalla mesh (cause inlet=0 + drag spurio)","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wip","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
-    {"id":"TF-023","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Boundary conditions wall: nutkRoughWallFunction con rugosita' Ks parametrica per classe (1e-5 m su superfici aero, 5e-3 m su ground)","start":"2026-05-13","end":"2026-05-13","progress":100,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-022","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"open","descrizione":"Fix thin-feature collapse in snappyHexMesh: garantire che shell e condotti sottili non vengano collassati dalla mesh (cause inlet=0 + drag spurio)","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wip","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-023","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Boundary conditions wall: nutkRoughWallFunction con rugosita' Ks parametrica per classe (1e-5 m su superfici aero, 5e-3 m su ground)","start":"2026-05-13","end":"2026-05-13","progress":100,"status":"wait","dependencies":"TF-022","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-024","tipo":"Verifica","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Validazione mesh: lanciare un case con shell forato da un condotto reale (spessori coerenti dentro/fuori), per confermare il fix thin-feature","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","dependencies":"TF-022","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-025","tipo":"Verifica","importanza":"Media","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Refinement mesh sul labbro del funnel (featureEdges + level locale) per eliminare il drag spurio rilevato all'imbocco","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
-    {"id":"TF-026","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"Documentazione fisica per team lab: frame galileiano (body fermo = body in moto), differenza slip vs no-slip, ruolo di rugosita' e wall function","start":"2026-05-19","end":"2026-05-21","progress":0,"status":"wait","dependencies":"TF-023","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-025","tipo":"Verifica","importanza":"Media","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Refinement mesh sul labbro del funnel (featureEdges + level locale) per eliminare il drag spurio rilevato all'imbocco","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-026","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"Documentazione fisica per team lab: frame galileiano (body fermo = body in moto), differenza slip vs no-slip, ruolo di rugosita' e wall function","start":"2026-05-19","end":"2026-05-21","progress":0,"status":"wait","dependencies":"TF-023","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-008","tipo":"Infra","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Inizializzare repository GitHub: .gitignore adeguato, CI smoke minimale, storia dalla workstation principale","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-007","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"Aggiornare HANDOFF.md con architettura hard-pause, canale biunivoco pannello↔CLI e regola del 9P","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-002","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Integrare automaticamente l'output OpenFOAM con un graph TyFlow in 3ds Max (operatori e flow CFD)","start":"2026-05-19","end":"2026-05-29","progress":0,"status":"wait","dependencies":"TF-001","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
@@ -304,20 +291,17 @@
     {"id":"TF-012","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"All'avvio del watcher, separare e gestire flag pendenti residui: READY orfani, RESUME, .tyfoam_running orfani, con prompt utente","start":"2026-04-29","end":"2026-04-29","progress":100,"status":"wait","dependencies":"TF-009","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-010","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"All'apertura del pannello Max, ricostruire stato sincronizzato sul case attivo o paused leggendo direttamente i flag dal disco","start":"2026-05-12","end":"2026-05-12","progress":100,"status":"wait","dependencies":"TF-009","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-011","tipo":"Bug","importanza":"Media","criticita":"Bassa","stato":"Now","dev_status":"done","descrizione":"Finestra LOG: lancio diretto wsl.exe (no .bat), kill albero su toggle off, anti-double-open, testo verde ANSI coerente col pulsante","start":"2026-05-18","end":"2026-05-18","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-018","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Pagina HTML di interpolazione cross-run: scatter + heatmap dei delta-U fra simulazioni diverse della stessa geometria","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-018","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Pagina HTML di interpolazione cross-run: scatter + heatmap dei delta-U fra simulazioni diverse della stessa geometria","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wait","dependencies":"TF-013","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-019","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Watcher: garantire export del campo pressione 'p' nei VTI volumetrici (verifica + fallback)","start":"2026-04-25","end":"2026-04-25","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-020","tipo":"Feature","importanza":"Media","criticita":"Bassa","stato":"Later","dev_status":"idea","descrizione":"Surrogate model leggero (Gaussian Process / RBF) sugli assi di variazione, attivato quando le run accumulate sono >= 30","start":"2026-06-07","end":"2026-06-18","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-020","tipo":"Feature","importanza":"Media","criticita":"Bassa","stato":"Later","dev_status":"idea","descrizione":"Surrogate model leggero (Gaussian Process / RBF) sugli assi di variazione, attivato quando le run accumulate sono >= 30","start":"2026-06-07","end":"2026-06-18","progress":0,"status":"wait","dependencies":"TF-013","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-017","tipo":"Infra","importanza":"Alta","criticita":"Bassa","stato":"Now","dev_status":"done","descrizione":"Handoff alla chat 'Analysis CFD': briefing scopo, primo memory di progetto, regole di sync Sheet/roadmap condivise","start":"2026-04-24","end":"2026-04-25","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-013","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"pending","descrizione":"Pipeline di ingestion CFD: parser VTU con pyvista + estrazione schema campi + inventory.csv/json di tutti i run","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","dependencies":"TF-017","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-014","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Report HTML/PDF auto-compilato per ogni run: grafici di pressione, forze Cd/Cp, residui, confronti fra configurazioni","start":"2026-05-19","end":"2026-05-25","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-015","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"backlog","descrizione":"Dashboard 3D nel browser: carica STL del modello + heatmap volumetrica della pressione per ispezione interattiva","start":"2026-05-19","end":"2026-05-29","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-016","tipo":"Feature","importanza":"Media","criticita":"Media","stato":"Later","dev_status":"idea","descrizione":"Tooltip al passaggio del mouse + streamtubes dei vettori velocita' sulla dashboard 3D (analisi di flusso interattiva)","start":"2026-05-25","end":"2026-06-02","progress":0,"status":"wait","dependencies":"TF-015","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-027","tipo":"Infra","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"blocked","descrizione":"Rinominare la cartella di scambio D:\\\\TyFOAM 2.0 → TyFOAM 1.4 per allineare al numero versione (richiede admin o reboot, lock Windows Search)","start":"2026-05-19","end":"2026-05-20","progress":0,"status":"block","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-013","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"pending","descrizione":"Pipeline di ingestion CFD: parser VTU con pyvista + estrazione schema campi + inventory.csv/json di tutti i run","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","dependencies":"TF-017","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-014","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Report HTML/PDF auto-compilato per ogni run: grafici di pressione, forze Cd/Cp, residui, confronti fra configurazioni","start":"2026-05-19","end":"2026-05-25","progress":0,"status":"wait","dependencies":"TF-013","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-015","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"backlog","descrizione":"Dashboard 3D nel browser: carica STL del modello + heatmap volumetrica della pressione per ispezione interattiva","start":"2026-05-19","end":"2026-05-29","progress":0,"status":"wait","dependencies":"TF-013","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-016","tipo":"Feature","importanza":"Media","criticita":"Media","stato":"Later","dev_status":"idea","descrizione":"Tooltip al passaggio del mouse + streamtubes dei vettori velocita' sulla dashboard 3D (analisi di flusso interattiva)","start":"2026-05-25","end":"2026-06-02","progress":0,"status":"wait","dependencies":"TF-015","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-027","tipo":"Infra","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"blocked","descrizione":"Rinominare la cartella di scambio D:\\\\TyFOAM 2.0 → TyFOAM 1.4 per allineare al numero versione (richiede admin o reboot, lock Windows Search)","start":"2026-05-19","end":"2026-05-20","progress":0,"status":"block","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
     {"id":"TF-028","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Terminare un case (running o paused) dal pannello via dropdown ▼ sul play → pulsante STOP rosso, con abort cooperativo nel watcher","start":"2026-05-12","end":"2026-05-13","progress":100,"status":"wait","dependencies":"TF-010","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
-    {"id":"TF-029","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Step createBaffles dopo snappyHexMesh: convertire i duct in superfici double-sided con patch separate inlet/outlet (fix definitivo thin features)","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam","conflicts":["TF-202@lab (overlap 78% — vedi note)"]},
-    {"id":"TF-200","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"[MOCKUP LAB] Esportatore VTU multi-time-step per ingestion CFD: gestione campo p+U+nut con metadati per parse_runs.py","start":"2026-05-20","end":"2026-05-26","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-201","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"[MOCKUP LAB] Glossario fisica condiviso in NERV/shared/glossary per allineare terminologia tra team TyFOAM e Lab","start":"2026-05-19","end":"2026-05-21","progress":0,"status":"wait","owner":"lab@aero-active.local","owner_team":"lab"},
-    {"id":"TF-202","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"open","descrizione":"[MOCKUP LAB - CONFLITTO] Mesh refinement su superfici sottili: aggiungere step di rebuild baffles per evitare leakage flusso","start":"2026-05-19","end":"2026-05-24","progress":10,"status":"wip","owner":"lab@aero-active.local","owner_team":"lab","conflicts":["TF-029@tyfoam (overlap 78% — stesso obiettivo: fix thin features via baffles, coordinare)"]}
+    {"id":"TF-029","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Step createBaffles dopo snappyHexMesh: convertire i duct in superfici double-sided con patch separate inlet/outlet (fix definitivo thin features)","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
   ]
 }
 </script>
