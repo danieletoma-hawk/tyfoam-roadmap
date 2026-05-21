@@ -583,26 +583,28 @@
         titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
         img.appendChild(titleEl);
         wrap.appendChild(img);
-        // Bandiera conflitto: ⚠ rosso all'inizio della bar (overlay sinistro, centrato vert)
+        // Bandiera conflitto: triangolo rosso pieno, esterno a sinistra della bar, centrato vert.
         if (Array.isArray(task.conflicts) && task.conflicts.length) {
-          const warn = document.createElementNS(svgNs, 'text');
-          warn.setAttribute('x', bx + 3);
-          warn.setAttribute('y', by + bh / 2);
-          warn.setAttribute('font-size', Math.max(12, bh * 0.7));
-          warn.setAttribute('fill', '#fff');
-          warn.setAttribute('stroke', '#c62828');
-          warn.setAttribute('stroke-width', '0.6');
-          warn.setAttribute('font-weight', '900');
-          warn.setAttribute('dominant-baseline', 'middle');
-          warn.setAttribute('text-anchor', 'start');
-          warn.setAttribute('class', 'gantt-conflict-flag');
-          warn.style.pointerEvents = 'auto';
-          warn.style.cursor = 'help';
-          warn.textContent = '⚠';
+          const triSize = Math.max(14, Math.min(bh, 22));
+          const gap = 6;
+          // Punta destra rivolta verso bar; base sinistra verticale.
+          const tipX = bx - gap;                 // punta
+          const baseX = tipX - triSize * 0.9;    // base verticale
+          const cy = by + bh / 2;
+          const tri = document.createElementNS(svgNs, 'polygon');
+          tri.setAttribute('points',
+            `${baseX},${cy - triSize/2} ${baseX},${cy + triSize/2} ${tipX},${cy}`
+          );
+          tri.setAttribute('fill', '#ff1744');
+          tri.setAttribute('stroke', '#fff');
+          tri.setAttribute('stroke-width', '1');
+          tri.setAttribute('class', 'gantt-conflict-flag');
+          tri.style.cursor = 'help';
+          tri.style.filter = 'drop-shadow(0 0 3px rgba(255,23,68,0.7))';
           const wt = document.createElementNS(svgNs, 'title');
           wt.textContent = task.conflicts.join(' | ');
-          warn.appendChild(wt);
-          wrap.appendChild(warn);
+          tri.appendChild(wt);
+          wrap.appendChild(tri);
         }
       });
       requestAnimationFrame(() => { host.scrollLeft = savedLeft; host.scrollTop = savedTop; applyGanttFilters(); });
