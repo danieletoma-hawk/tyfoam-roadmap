@@ -67,6 +67,13 @@
   #gantt .bar-wrapper.selected .bar { stroke:#6cf; stroke-width:3px; }
   #gantt .bar-wrapper.selected .bar-label { fill:#6cf !important; font-weight:700; }
   #gantt .bar-wrapper.hide-progress .bar-progress { display:none; }
+  /* v2: toggle visibilità avatar profili */
+  body.hide-avatars .owner-avatar,
+  body.hide-avatars .gantt-owner-avatar,
+  body.hide-avatars .owner-chip img,
+  body.hide-avatars #gantt image.gantt-owner-avatar { display:none !important; }
+  body.hide-avatars .owner-name { font-style:italic; }
+  #toggle-avatars.off { background:#222; color:#666; border-color:#444; }
   #gantt-container { background:#252525; border-radius:8px; padding:10px; overflow:auto; max-height:70vh; }
 
   /* Dark mode per frappe-gantt — solo sfondo/testi/linee, NON tocca i .bar */
@@ -204,6 +211,7 @@
   <span class="swatch toggle" data-status="wip"   style="background:#f1c40f"></span>in sviluppo
   <span class="swatch toggle" data-status="block" style="background:#e74c3c"></span>bloccato
   <span class="swatch toggle" data-status="progress" style="background:#27ae60"></span>progress (layer verde)
+  <button id="toggle-avatars" class="legend-btn" title="Mostra/nascondi avatar profili nella sinottica e nelle bar del Gantt">👤 Profili</button>
   <button id="toggle-all-tree" class="legend-btn" title="Espandi/comprimi tutti i task con figli">⊟ Espandi tutto</button>
 </div>
 <div id="gantt-container"><svg id="gantt"></svg></div>
@@ -679,6 +687,18 @@
     renderSyn();
     applyGanttFilters();
   });
+
+  // v2: toggle visibilità avatar profili
+  let hideAvatars = false;
+  const btnAvatars = document.getElementById('toggle-avatars');
+  if (btnAvatars) {
+    btnAvatars.addEventListener('click', () => {
+      hideAvatars = !hideAvatars;
+      document.body.classList.toggle('hide-avatars', hideAvatars);
+      btnAvatars.classList.toggle('off', hideAvatars);
+      btnAvatars.textContent = hideAvatars ? '👤 Profili (off)' : '👤 Profili';
+    });
+  }
 
   // Toggle espandi/comprimi tutti i task padri
   const btnToggleAll = document.getElementById('toggle-all-tree');
