@@ -268,7 +268,7 @@
   "last_sync": "2026-05-19",
   "token_daily_avg_k": null,
   "owners": {
-    "daniele@tyfoam.dev": {"name": "Daniele", "team": "tyfoam"}
+    "daniele@tyfoam.dev": {"name": "Daniele", "team": "tyfoam", "tint": "hue-rotate(110deg) saturate(2.2) brightness(1.05)"}
   },
   "tasks": [
     {"id":"TF-001","tipo":"Verifica","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Verificare ciclo completo hard pause/resume su un case reale: pannello → pausa → reboot WSL → resume da latestTime, end-to-end","start":"2026-05-12","end":"2026-05-12","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
@@ -358,8 +358,9 @@
     const info = ownerInfo(email);
     const url = gravatarUrl(email, 44);
     const teamCls = "team-" + (info.team || "ext");
+    const tint = info.tint ? ` style="filter:${info.tint}"` : "";
     return `<span class="owner-cell" title="${email} (${info.team})">`
-      + `<img class="owner-avatar" src="${url}" alt="${info.name}" loading="lazy"/>`
+      + `<img class="owner-avatar" data-owner="${email}" src="${url}" alt="${info.name}" loading="lazy"${tint}/>`
       + (withName ? `<span class="owner-name">${info.name}</span>` : "")
       + `<span class="owner-team ${teamCls}">${info.team}</span>`
       + `</span>`;
@@ -564,6 +565,9 @@
         img.setAttribute('height', size);
         img.setAttribute('clip-path', 'circle()');
         img.setAttribute('class', 'gantt-owner-avatar');
+        img.setAttribute('data-owner', task.owner);
+        const ownerTint = (OWNERS[task.owner] || {}).tint;
+        if (ownerTint) img.style.filter = ownerTint;
         const titleEl = document.createElementNS(svgNs, 'title');
         const info = ownerInfo(task.owner);
         titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
