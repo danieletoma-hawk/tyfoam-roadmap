@@ -587,23 +587,22 @@
         titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
         img.appendChild(titleEl);
         wrap.appendChild(img);
-        // Bandiera conflitto: triangolo rosso pieno, esterno a sinistra della bar (dopo avatar), centrato vert.
+        // Bandiera conflitto: triangolo warning rosso pieno, punta alto + base piana,
+        // esterno a sinistra della bar (dopo avatar), centrato verticalmente sulla bar.
         if (hasConflict) {
           const gap = 6;
-          // Punta destra rivolta verso bar; base sinistra verticale.
-          const tipX = bx - gap;                 // punta
-          const baseX = tipX - triSize * 0.9;    // base verticale
+          const rightEdge = bx - gap;
+          const centerX = rightEdge - triSize / 2;
           const cy = by + bh / 2;
+          const tipY = cy - triSize / 2;
+          const baseY = cy + triSize / 2;
           const tri = document.createElementNS(svgNs, 'polygon');
           tri.setAttribute('points',
-            `${baseX},${cy - triSize/2} ${baseX},${cy + triSize/2} ${tipX},${cy}`
+            `${centerX},${tipY} ${centerX - triSize/2},${baseY} ${centerX + triSize/2},${baseY}`
           );
           tri.setAttribute('fill', '#ff1744');
-          tri.setAttribute('stroke', '#fff');
-          tri.setAttribute('stroke-width', '1');
           tri.setAttribute('class', 'gantt-conflict-flag');
           tri.style.cursor = 'help';
-          tri.style.filter = 'drop-shadow(0 0 3px rgba(255,23,68,0.7))';
           const wt = document.createElementNS(svgNs, 'title');
           wt.textContent = task.conflicts.join(' | ');
           tri.appendChild(wt);
