@@ -583,14 +583,21 @@
         titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
         img.appendChild(titleEl);
         wrap.appendChild(img);
-        // Bandiera conflitto: ⚠ rosso sopra la barra
+        // Bandiera conflitto: ⚠ rosso all'inizio della bar (overlay sinistro, centrato vert)
         if (Array.isArray(task.conflicts) && task.conflicts.length) {
           const warn = document.createElementNS(svgNs, 'text');
-          warn.setAttribute('x', bx + 4);
-          warn.setAttribute('y', by - 4);
-          warn.setAttribute('font-size', '14');
-          warn.setAttribute('fill', '#e74c3c');
-          warn.setAttribute('font-weight', '700');
+          warn.setAttribute('x', bx + 3);
+          warn.setAttribute('y', by + bh / 2);
+          warn.setAttribute('font-size', Math.max(12, bh * 0.7));
+          warn.setAttribute('fill', '#fff');
+          warn.setAttribute('stroke', '#c62828');
+          warn.setAttribute('stroke-width', '0.6');
+          warn.setAttribute('font-weight', '900');
+          warn.setAttribute('dominant-baseline', 'middle');
+          warn.setAttribute('text-anchor', 'start');
+          warn.setAttribute('class', 'gantt-conflict-flag');
+          warn.style.pointerEvents = 'auto';
+          warn.style.cursor = 'help';
           warn.textContent = '⚠';
           const wt = document.createElementNS(svgNs, 'title');
           wt.textContent = task.conflicts.join(' | ');
