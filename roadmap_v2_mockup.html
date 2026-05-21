@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>TyFOAM Gantt v2 — MOCKUP multi-collab</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+<script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
+<style>
+  /* Owner avatar + team badge (v2 mockup) */
+  .owner-cell { display:flex; align-items:center; gap:6px; justify-content:flex-start; }
+  .owner-avatar { width:22px; height:22px; border-radius:50%; vertical-align:middle; border:1px solid #444; background:#222; }
+  .owner-name { font-size:11px; color:#bbb; }
+  .owner-team { font-size:10px; padding:1px 5px; border-radius:8px; font-weight:600; }
+  .team-tyfoam { background:#3a86ff; color:#fff; }
+  .team-lab    { background:#ff9f1c; color:#000; }
+  .team-ext    { background:#9e9e9e; color:#000; }
+  .syn-chip.owner-chip { display:inline-flex; align-items:center; gap:4px; }
+  .syn-chip.owner-chip img { width:14px; height:14px; border-radius:50%; }
+  .conflict-badge {
+    display:inline-block; margin-left:6px; padding:1px 5px; border-radius:8px;
+    background:#c62828; color:#fff; font-size:10px; font-weight:700; cursor:help;
+  }
+  /* Banner mockup */
+  .mockup-banner {
+    background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+    color:#fff; padding:8px 14px; border-radius:6px; margin-bottom:14px;
+    font-size:13px; border:1px solid #3a86ff;
+  }
+  .mockup-banner b { color:#ffd166; }
+  body { font-family: system-ui, sans-serif; margin: 20px; background: #1e1e1e; color: #eee; }
+  h1 { margin: 0 0 8px; }
+  .bar-row { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  #refresh { width:38px; height:38px; border-radius:50%; border:none; cursor:pointer; font-size:18px; color:#fff; background:#555; transition:background 0.2s; display:inline-flex; align-items:center; justify-content:center; }
+  #refresh.copied { background:#27ae60; }
+  .refresh-wrap { position:relative; display:inline-block; }
+  #toast { position:absolute; left:calc(100% + 10px); top:50%; transform:translateY(-50%); background:#27ae60; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+  #toast.show { opacity:1; }
+  .metric { background:#2a2a2a; padding:8px 12px; border-radius:6px; font-size:13px; }
+  .legend { font-size:12px; color:#aaa; margin-bottom:8px; }
+  .swatch { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:middle; margin: 0 4px 0 10px; }
+  .swatch.toggle { cursor:pointer; outline:1px solid transparent; transition:opacity 0.15s, outline-color 0.15s; }
+  .swatch.toggle.off { opacity:0.25; outline-color:#666; }
+  .legend-btn { margin-left:14px; padding:3px 10px; border-radius:4px; border:1px solid #555; background:#2a2a2a; color:#ddd; font-size:12px; cursor:pointer; transition:background 0.15s; }
+  .legend-btn:hover { background:#3a86ff; color:#fff; border-color:#3a86ff; }
+  /* Synoptic filter legend */
+  .syn-legend { display:flex; flex-direction:column; gap:6px; margin:8px 0 12px; font-size:12px; }
+  .syn-leg-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+  .syn-leg-label { color:#aaa; min-width:78px; }
+  .syn-chip { display:inline-block; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; cursor:pointer; outline:1px solid transparent; transition:opacity 0.15s, outline-color 0.15s; user-select:none; }
+  .syn-chip.off { opacity:0.25; outline-color:#666; }
+  .syn-legend-wrap { margin:8px 0 4px; }
+  .syn-legend-toggle { list-style:none; cursor:pointer; font-size:12px; color:#aaa; padding:4px 0; user-select:none; }
+  .syn-legend-toggle::-webkit-details-marker { display:none; }
+  .syn-legend-toggle:hover { color:#fff; }
+  details.syn-legend-wrap:not([open]) .syn-legend { display:none; }
+  table.synoptic tbody tr { cursor:pointer; }
+  table.synoptic tbody tr:nth-child(odd)  { background:#1f1f1f; }
+  table.synoptic tbody tr:nth-child(even) { background:#262626; }
+  table.synoptic tbody tr:hover { background:#333; }
+  table.synoptic tbody tr.selected { outline:2px solid #6cf; outline-offset:-2px; background:#2c2c2c; }
+  /* Descrizioni: dimmed di default, accese sulla riga selezionata o in hover */
+  table.synoptic tbody tr td.desc { color:#7a7a7a; transition:color 0.15s; }
+  table.synoptic tbody tr:hover td.desc { color:#bcbcbc; }
+  table.synoptic tbody tr.selected td.desc { color:#fff; font-weight:600; }
+  #gantt .bar-wrapper.hidden-status { display:none; }
+  #gantt .bar-wrapper.dimmed .bar, #gantt .bar-wrapper.dimmed .bar-progress, #gantt .bar-wrapper.dimmed .bar-label { opacity:0.25; }
+  #gantt .bar-wrapper.selected .bar { stroke:#6cf; stroke-width:3px; }
+  #gantt .bar-wrapper.selected .bar-label { fill:#6cf !important; font-weight:700; }
+  #gantt .bar-wrapper.hide-progress .bar-progress { display:none; }
+  #gantt-container { background:#252525; border-radius:8px; padding:10px; overflow:auto; max-height:70vh; }
+
+  /* Dark mode per frappe-gantt — solo sfondo/testi/linee, NON tocca i .bar */
+  #gantt .grid-background { fill: #252525; }
+  #gantt .grid-header { fill: #1a1a1a; }
+  #gantt .grid-row { fill: #2a2a2a; }
+  #gantt .grid-row:nth-child(even) { fill: #222; }
+  #gantt .row-line { stroke: #3a3a3a; }
+  #gantt .tick { stroke: #444; }
+  #gantt .today-highlight { fill: #f1c40f; opacity: 0.12; }
+  #gantt .lower-text, #gantt .upper-text { fill: #ccc; }
+  /* Gantt task labels: hidden by default, mostrate al hover sulla barra */
+  #gantt .bar-label { fill: #fff !important; opacity:0; pointer-events:none; transition:opacity 0.15s; }
+  #gantt .bar-wrapper:hover .bar-label { opacity:1; }
+  #gantt .bar-wrapper.selected .bar-label { opacity:1; }
+  #gantt .arrow { stroke: #6cf; stroke-width: 1.6; fill: none; }
+  #gantt { display:block; }
+  /* Evita che il CSS globale forzi width:100% sull'SVG e lo faccia collassare allo scroll */
+  #gantt-container svg { width:auto !important; height:auto !important; }
+
+  /* Synoptic table */
+  table.synoptic { width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px; background:#2a2a2a; border-radius:8px; overflow:hidden; }
+  table.synoptic th, table.synoptic td { padding:6px 10px; text-align:center; border-bottom:1px solid #333; }
+  table.synoptic th { background:#111; color:#ccc; font-weight:600; }
+  table.synoptic th.sortable { cursor:pointer; user-select:none; }
+  table.synoptic th.sortable:hover { background:#1a1a1a; color:#fff; }
+  table.synoptic td.desc { text-align:left; }
+
+  /* Importanza: scala azzurro */
+  .imp-Alta   { background:#1976d2; color:#fff; }
+  .imp-Media  { background:#64b5f6; color:#000; }
+  .imp-Bassa  { background:#bbdefb; color:#000; }
+
+  /* Criticita: scala arancio */
+  .crit-Alta  { background:#e65100; color:#fff; }
+  .crit-Media { background:#fb8c00; color:#000; }
+  .crit-Bassa { background:#ffe0b2; color:#000; }
+
+  /* Stato: scala verde */
+  .sta-Now    { background:#1b5e20; color:#fff; }
+  .sta-Next   { background:#66bb6a; color:#000; }
+  .sta-Later  { background:#c8e6c9; color:#000; }
+
+  /* Tipo */
+  .tipo-Bug      { background:#c62828; color:#fff; }
+  .tipo-Feature  { background:#7b1fa2; color:#fff; }
+  .tipo-Docs,
+  .tipo-Infra,
+  .tipo-Verifica { background:#616161; color:#fff; }
+
+  .dev-pct { display:inline-block; margin-left:6px; padding:1px 5px; border-radius:8px; background:rgba(0,0,0,0.30); color:#fff; font-size:11px; font-weight:600; }
+  table.synoptic td[class*="dev-"] { font-weight:600; text-shadow:0 1px 1px rgba(0,0,0,0.4); }
+  /* Column hide/show */
+  table.synoptic th { position:relative; }
+  table.synoptic th .col-label { cursor:pointer; }
+  table.synoptic th .col-toggle {
+    position:absolute; top:2px; right:4px;
+    width:16px; height:16px; line-height:14px;
+    border-radius:50%; background:rgba(255,255,255,0.10); color:#ccc;
+    font-size:12px; font-weight:700; text-align:center;
+    cursor:pointer; opacity:0; transition:opacity 0.15s, background 0.15s;
+    user-select:none;
+  }
+  table.synoptic th:hover .col-toggle { opacity:1; }
+  table.synoptic th .col-toggle:hover { background:#3a86ff; color:#fff; }
+  table.synoptic th.col-hidden {
+    width:18px; min-width:18px; max-width:18px; padding:6px 2px; background:#1a1a1a; color:transparent;
+  }
+  table.synoptic th.col-hidden .col-toggle { opacity:1; right:1px; }
+  table.synoptic td.col-hidden {
+    width:18px; min-width:18px; max-width:18px; padding:0;
+    background:#1a1a1a !important; color:transparent !important;
+    overflow:hidden; white-space:nowrap;
+  }
+  table.synoptic td.col-hidden * { display:none !important; }
+  /* dev_status — solo colore testo; background impostato inline come
+     progress bar via linear-gradient (cella stessa = bar). */
+  .dev-done    { color:#fff; }
+  .dev-open    { color:#000; }
+  .dev-pending { color:#000; }
+  .dev-blocked { color:#fff; }
+  .dev-backlog { color:#000; }
+  .dev-idea    { color:#fff; }
+
+
+  /* Read-only: nascondi handle di resize e disabilita cursore drag */
+  #gantt .handle-group { display: none !important; }
+  #gantt .bar-wrapper .bar { cursor: pointer !important; }
+
+  /* Fallback default per le barre (se status class non applicata) */
+  #gantt .bar { fill: #9aa0a6; }
+  /* Status colors override */
+  #gantt .bar-wrapper.status-wait .bar { fill: #9aa0a6; }
+  #gantt .bar-wrapper.status-wip  .bar { fill: #f1c40f; }
+  #gantt .bar-wrapper.status-block .bar { fill: #e74c3c; }
+
+  /* Green progress overlay on top of base color */
+  .gantt .bar-wrapper .bar-progress { fill: #27ae60 !important; opacity: 0.95; }
+
+  details summary::-webkit-details-marker { display:none; }
+  details .chev { display:inline-block; transition:transform 0.2s; font-size:12px; margin-right:4px; }
+  details:not([open]) .chev { transform:rotate(-90deg); }
+
+  /* Parent row distinctive */
+  .gantt .bar-wrapper.is-parent .bar { stroke: #2c3e50; stroke-width: 2px; }
+  .gantt .bar-wrapper.is-parent .bar-label { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="mockup-banner">
+  <b>v2 MOCKUP</b> — multi-collab + owner avatar (Gravatar identicon, no OAuth) + cross-team conflict badges.
+  Versione originale resta su <code>roadmap.html</code>. Feedback su questo file → poi promuovo a stabile.
+</div>
+
+<h1>TyFOAM - Roadmap Gantt <span style="font-size:14px;color:#ffd166;">[v2 mockup]</span></h1>
+
+<div class="bar-row">
+  <span class="refresh-wrap">
+    <button id="refresh" title="Copia comando sync_todo">&#x21BB;</button>
+    <span id="toast">comando copiato</span>
+  </span>
+  <div class="metric">Ultimo sync: <span id="last-sync">--</span></div>
+  <div class="metric">Token/giorno (Opus 4.7 Low): <span id="token-avg">da calibrare</span></div>
+  <div class="metric">Sheet: <a href="https://docs.google.com/spreadsheets/d/1h-OVN0oAr2MT2OGtVlrUIUkCOfVcPhq3YTDLfTjpNpk/edit" target="_blank" style="color:#6cf">apri</a></div>
+</div>
+
+<details open id="sec-timeline">
+<summary style="margin:18px 0 6px;font-size:16px;font-weight:600;cursor:pointer;list-style:none;">
+  <span class="chev">&#x25BC;</span> Timeline
+</summary>
+<div class="legend">
+  Stati Gantt (click per nascondere/mostrare):
+  <span class="swatch toggle" data-status="wait"  style="background:#9aa0a6"></span>in attesa
+  <span class="swatch toggle" data-status="wip"   style="background:#f1c40f"></span>in sviluppo
+  <span class="swatch toggle" data-status="block" style="background:#e74c3c"></span>bloccato
+  <span class="swatch toggle" data-status="progress" style="background:#27ae60"></span>progress (layer verde)
+  <button id="toggle-all-tree" class="legend-btn" title="Espandi/comprimi tutti i task con figli">⊟ Espandi tutto</button>
+</div>
+<div id="gantt-container"><svg id="gantt"></svg></div>
+<div id="gantt-error" style="color:#e74c3c;margin-top:8px;font-size:13px;"></div>
+</details>
+
+<details open id="sec-syn">
+<summary style="margin:18px 0 6px;font-size:16px;font-weight:600;cursor:pointer;list-style:none;">
+  <span class="chev">&#x25BC;</span> Vista sinottica
+</summary>
+<details open class="syn-legend-wrap">
+<summary class="syn-legend-toggle"><span class="chev">&#x25BC;</span> Filtri categorie</summary>
+<div class="syn-legend">
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">Tipo:</span>
+    <span class="syn-chip toggle" data-axis="tipo" data-val="Bug"      style="background:#c62828; color:#fff">Bug</span>
+    <span class="syn-chip toggle" data-axis="tipo" data-val="Feature"  style="background:#7b1fa2; color:#fff">Feature</span>
+    <span class="syn-chip toggle" data-axis="tipo" data-val="Verifica" style="background:#616161; color:#fff">Verifica</span>
+    <span class="syn-chip toggle" data-axis="tipo" data-val="Docs"     style="background:#616161; color:#fff">Docs</span>
+    <span class="syn-chip toggle" data-axis="tipo" data-val="Infra"    style="background:#616161; color:#fff">Infra</span>
+  </div>
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">Importanza:</span>
+    <span class="syn-chip toggle" data-axis="importanza" data-val="Alta"  style="background:#1976d2; color:#fff">Alta</span>
+    <span class="syn-chip toggle" data-axis="importanza" data-val="Media" style="background:#64b5f6; color:#000">Media</span>
+    <span class="syn-chip toggle" data-axis="importanza" data-val="Bassa" style="background:#bbdefb; color:#000">Bassa</span>
+  </div>
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">Criticità:</span>
+    <span class="syn-chip toggle" data-axis="criticita" data-val="Alta"  style="background:#e65100; color:#fff">Alta</span>
+    <span class="syn-chip toggle" data-axis="criticita" data-val="Media" style="background:#fb8c00; color:#000">Media</span>
+    <span class="syn-chip toggle" data-axis="criticita" data-val="Bassa" style="background:#ffe0b2; color:#000">Bassa</span>
+  </div>
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">Stato:</span>
+    <span class="syn-chip toggle" data-axis="stato" data-val="Now"   style="background:#1b5e20; color:#fff">Now</span>
+    <span class="syn-chip toggle" data-axis="stato" data-val="Next"  style="background:#66bb6a; color:#000">Next</span>
+    <span class="syn-chip toggle" data-axis="stato" data-val="Later" style="background:#c8e6c9; color:#000">Later</span>
+  </div>
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">dev_status:</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="open"    style="background:#81c784; color:#000">open</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="pending" style="background:#ef9a9a; color:#000">pending</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="blocked" style="background:#c62828; color:#fff">blocked</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="backlog" style="background:#cfd8dc; color:#000">backlog</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="idea"    style="background:#546e7a; color:#fff">idea</span>
+    <span class="syn-chip toggle" data-axis="dev_status" data-val="done"    style="background:#2e7d32; color:#fff">done</span>
+  </div>
+  <div class="syn-leg-row" id="owner-legend">
+    <span class="syn-leg-label">Owner:</span>
+    <!-- popolato dinamicamente da JS, una chip per ogni owner unico -->
+  </div>
+  <div class="syn-leg-row">
+    <span class="syn-leg-label">Team:</span>
+    <span class="syn-chip toggle team-tyfoam" data-axis="owner_team" data-val="tyfoam">TyFOAM</span>
+    <span class="syn-chip toggle team-lab"    data-axis="owner_team" data-val="lab">Lab Fisica</span>
+    <span class="syn-chip toggle team-ext"    data-axis="owner_team" data-val="ext">External</span>
+  </div>
+</div>
+</details>
+<table class="synoptic" id="syn"></table>
+</details>
+
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+<script id="todo-data" type="application/json">
+{
+  "last_sync": "2026-05-19",
+  "token_daily_avg_k": null,
+  "owners": {
+    "daniele@tyfoam.dev":   {"name": "Daniele",  "team": "tyfoam"},
+    "lorenzo@aero-active.local":  {"name": "Lorenzo",  "team": "tyfoam"},
+    "lab@aero-active.local":      {"name": "Lab Fisica","team": "lab"}
+  },
+  "tasks": [
+    {"id":"TF-001","tipo":"Verifica","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Verificare ciclo completo hard pause/resume su un case reale: pannello → pausa → reboot WSL → resume da latestTime, end-to-end","start":"2026-05-12","end":"2026-05-12","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-005","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"blocked","descrizione":"Deploy automatico unico: copiare plugin Max 2024 + 2026 + script WSL in un solo comando, eliminando drift di versione","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"block","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-021","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Portare iterazioni endTime default da 800 a 2000 mantenendo auto-stop su convergenza dei residui (< 1e-5)","start":"2026-05-12","end":"2026-05-13","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-022","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"open","descrizione":"Fix thin-feature collapse in snappyHexMesh: garantire che shell e condotti sottili non vengano collassati dalla mesh (cause inlet=0 + drag spurio)","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wip","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-023","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Boundary conditions wall: nutkRoughWallFunction con rugosita' Ks parametrica per classe (1e-5 m su superfici aero, 5e-3 m su ground)","start":"2026-05-13","end":"2026-05-13","progress":100,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-024","tipo":"Verifica","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Validazione mesh: lanciare un case con shell forato da un condotto reale (spessori coerenti dentro/fuori), per confermare il fix thin-feature","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","dependencies":"TF-022","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-025","tipo":"Verifica","importanza":"Media","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Refinement mesh sul labbro del funnel (featureEdges + level locale) per eliminare il drag spurio rilevato all'imbocco","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-026","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"Documentazione fisica per team lab: frame galileiano (body fermo = body in moto), differenza slip vs no-slip, ruolo di rugosita' e wall function","start":"2026-05-19","end":"2026-05-21","progress":0,"status":"wait","dependencies":"TF-023","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-008","tipo":"Infra","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"pending","descrizione":"Inizializzare repository GitHub: .gitignore adeguato, CI smoke minimale, storia dalla workstation principale","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-007","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"Aggiornare HANDOFF.md con architettura hard-pause, canale biunivoco pannello↔CLI e regola del 9P","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-002","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Integrare automaticamente l'output OpenFOAM con un graph TyFlow in 3ds Max (operatori e flow CFD)","start":"2026-05-19","end":"2026-05-29","progress":0,"status":"wait","dependencies":"TF-001","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-003","tipo":"Feature","importanza":"Media","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Automatizzare il posizionamento dei seed degli streamline su ParaView dalla bounding box dell'oggetto","start":"2026-05-21","end":"2026-05-27","progress":0,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-004","tipo":"Feature","importanza":"Media","criticita":"Bassa","stato":"Later","dev_status":"backlog","descrizione":"Bridge VTI → OpenVDB per consumare i campi volumetrici dentro tyFlow Birth Voxels","start":"2026-05-28","end":"2026-06-04","progress":0,"status":"wait","dependencies":"TF-002","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-006","tipo":"Feature","importanza":"Bassa","criticita":"Bassa","stato":"Later","dev_status":"idea","descrizione":"Estendere l'hard-pause anche alla fase di Meshing (oggi supportato solo durante Solve)","start":"2026-06-02","end":"2026-06-07","progress":0,"status":"wait","dependencies":"TF-001","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-009","tipo":"Bug","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"done","descrizione":"Bloccare i pulsanti UPLOAD e SIMULA se l'engine WSL e' OFF, per evitare flag .tyfoam_ready fantasma in cases/","start":"2026-04-29","end":"2026-04-29","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-012","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"All'avvio del watcher, separare e gestire flag pendenti residui: READY orfani, RESUME, .tyfoam_running orfani, con prompt utente","start":"2026-04-29","end":"2026-04-29","progress":100,"status":"wait","dependencies":"TF-009","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-010","tipo":"Bug","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"All'apertura del pannello Max, ricostruire stato sincronizzato sul case attivo o paused leggendo direttamente i flag dal disco","start":"2026-05-12","end":"2026-05-12","progress":100,"status":"wait","dependencies":"TF-009","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-011","tipo":"Bug","importanza":"Media","criticita":"Bassa","stato":"Now","dev_status":"done","descrizione":"Finestra LOG: lancio diretto wsl.exe (no .bat), kill albero su toggle off, anti-double-open, testo verde ANSI coerente col pulsante","start":"2026-05-18","end":"2026-05-18","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-018","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Pagina HTML di interpolazione cross-run: scatter + heatmap dei delta-U fra simulazioni diverse della stessa geometria","start":"2026-05-19","end":"2026-05-24","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-019","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Watcher: garantire export del campo pressione 'p' nei VTI volumetrici (verifica + fallback)","start":"2026-04-25","end":"2026-04-25","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-020","tipo":"Feature","importanza":"Media","criticita":"Bassa","stato":"Later","dev_status":"idea","descrizione":"Surrogate model leggero (Gaussian Process / RBF) sugli assi di variazione, attivato quando le run accumulate sono >= 30","start":"2026-06-07","end":"2026-06-18","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-017","tipo":"Infra","importanza":"Alta","criticita":"Bassa","stato":"Now","dev_status":"done","descrizione":"Handoff alla chat 'Analysis CFD': briefing scopo, primo memory di progetto, regole di sync Sheet/roadmap condivise","start":"2026-04-24","end":"2026-04-25","progress":100,"status":"wait","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-013","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"pending","descrizione":"Pipeline di ingestion CFD: parser VTU con pyvista + estrazione schema campi + inventory.csv/json di tutti i run","start":"2026-05-19","end":"2026-05-22","progress":0,"status":"wait","dependencies":"TF-017","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-014","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"Report HTML/PDF auto-compilato per ogni run: grafici di pressione, forze Cd/Cp, residui, confronti fra configurazioni","start":"2026-05-19","end":"2026-05-25","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-015","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"backlog","descrizione":"Dashboard 3D nel browser: carica STL del modello + heatmap volumetrica della pressione per ispezione interattiva","start":"2026-05-19","end":"2026-05-29","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-016","tipo":"Feature","importanza":"Media","criticita":"Media","stato":"Later","dev_status":"idea","descrizione":"Tooltip al passaggio del mouse + streamtubes dei vettori velocita' sulla dashboard 3D (analisi di flusso interattiva)","start":"2026-05-25","end":"2026-06-02","progress":0,"status":"wait","dependencies":"TF-015","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-027","tipo":"Infra","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"blocked","descrizione":"Rinominare la cartella di scambio D:\\\\TyFOAM 2.0 → TyFOAM 1.4 per allineare al numero versione (richiede admin o reboot, lock Windows Search)","start":"2026-05-19","end":"2026-05-20","progress":0,"status":"block","owner":"lorenzo@aero-active.local","owner_team":"tyfoam"},
+    {"id":"TF-028","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Now","dev_status":"done","descrizione":"Terminare un case (running o paused) dal pannello via dropdown ▼ sul play → pulsante STOP rosso, con abort cooperativo nel watcher","start":"2026-05-12","end":"2026-05-13","progress":100,"status":"wait","dependencies":"TF-010","owner":"daniele@tyfoam.dev","owner_team":"tyfoam"},
+    {"id":"TF-029","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Next","dev_status":"pending","descrizione":"Step createBaffles dopo snappyHexMesh: convertire i duct in superfici double-sided con patch separate inlet/outlet (fix definitivo thin features)","start":"2026-05-19","end":"2026-05-23","progress":0,"status":"wait","dependencies":"TF-022","owner":"lorenzo@aero-active.local","owner_team":"tyfoam","conflicts":["TF-202@lab (overlap 78% — vedi note)"]},
+    {"id":"TF-200","tipo":"Feature","importanza":"Alta","criticita":"Media","stato":"Next","dev_status":"backlog","descrizione":"[MOCKUP LAB] Esportatore VTU multi-time-step per ingestion CFD: gestione campo p+U+nut con metadati per parse_runs.py","start":"2026-05-20","end":"2026-05-26","progress":0,"status":"wait","dependencies":"TF-013","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-201","tipo":"Docs","importanza":"Media","criticita":"Bassa","stato":"Next","dev_status":"pending","descrizione":"[MOCKUP LAB] Glossario fisica condiviso in NERV/shared/glossary per allineare terminologia tra team TyFOAM e Lab","start":"2026-05-19","end":"2026-05-21","progress":0,"status":"wait","owner":"lab@aero-active.local","owner_team":"lab"},
+    {"id":"TF-202","tipo":"Feature","importanza":"Alta","criticita":"Alta","stato":"Now","dev_status":"open","descrizione":"[MOCKUP LAB - CONFLITTO] Mesh refinement su superfici sottili: aggiungere step di rebuild baffles per evitare leakage flusso","start":"2026-05-19","end":"2026-05-24","progress":10,"status":"wip","owner":"lab@aero-active.local","owner_team":"lab","conflicts":["TF-029@tyfoam (overlap 78% — stesso obiettivo: fix thin features via baffles, coordinare)"]}
+  ]
+}
+</script>
+<script>
+  const data = JSON.parse(document.getElementById('todo-data').textContent);
+  document.getElementById('last-sync').textContent = data.last_sync;
+  if (data.token_daily_avg_k) document.getElementById('token-avg').textContent = `~${data.token_daily_avg_k} k`;
+
+  const allTasks = data.tasks;
+  const depsOf = t => (t.dependencies || "").split(",").map(s=>s.trim()).filter(Boolean);
+  const childrenOf = id => allTasks.filter(t => depsOf(t).includes(id));
+  const hasChildren = id => childrenOf(id).length > 0;
+  const expanded = new Set();
+
+  function isVisible(t) {
+    const parents = depsOf(t);
+    if (parents.length === 0) return true;
+    return parents.every(pid => expanded.has(pid) && isVisible(allTasks.find(x=>x.id===pid) || {}));
+  }
+
+  // Synoptic table (sortable)
+  const RANKS = {
+    tipo:       {Bug:0, Feature:1, Verifica:2, Infra:3, Docs:4},
+    importanza: {Alta:0, Media:1, Bassa:2},
+    criticita:  {Alta:0, Media:1, Bassa:2},
+    stato:      {Now:0, Next:1, Later:2},
+    dev_status: {open:0, blocked:1, pending:2, backlog:3, idea:4, done:5}
+  };
+  const SORT_COLS = [
+    {key:"id",          label:"ID",          sortable:true},
+    {key:"tipo",        label:"Tipo",        sortable:true},
+    {key:"descrizione", label:"Descrizione", sortable:false},
+    {key:"owner",       label:"Owner",       sortable:true},
+    {key:"importanza",  label:"Importanza",  sortable:true},
+    {key:"criticita",   label:"Criticita",   sortable:true},
+    {key:"stato",       label:"Stato",       sortable:true},
+    {key:"dependencies",label:"Dipende da",  sortable:false},
+    {key:"dev_status",  label:"dev_status",  sortable:true}
+  ];
+  let sortState = {key:null, dir:1};
+  const hiddenCols = new Set();  // chiavi colonne nascoste
+  // hiddenFilters per categoria. v2: aggiunti owner + owner_team
+  const hiddenFilters = { tipo: new Set(), importanza: new Set(), criticita: new Set(), stato: new Set(), dev_status: new Set(), owner: new Set(), owner_team: new Set() };
+  // Owner registry (da JSON data.owners)
+  const OWNERS = data.owners || {};
+  function gravatarUrl(email, size=22) {
+    const hash = (typeof md5 === 'function') ? md5((email||"").trim().toLowerCase()) : "";
+    return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=${size}`;
+  }
+  function ownerInfo(email) {
+    const o = OWNERS[email] || { name: email || "—", team: "ext" };
+    return o;
+  }
+  function ownerCellHtml(email, withName=true) {
+    if (!email) return '<span style="color:#666">—</span>';
+    const info = ownerInfo(email);
+    const url = gravatarUrl(email, 44);
+    const teamCls = "team-" + (info.team || "ext");
+    return `<span class="owner-cell" title="${email} (${info.team})">`
+      + `<img class="owner-avatar" src="${url}" alt="${info.name}" loading="lazy"/>`
+      + (withName ? `<span class="owner-name">${info.name}</span>` : "")
+      + `<span class="owner-team ${teamCls}">${info.team}</span>`
+      + `</span>`;
+  }
+
+  function renderSyn(){
+    const syn = document.getElementById('syn');
+    const rows = allTasks.filter(t => !t.parent).filter(t => {
+      for (const [axis, set] of Object.entries(hiddenFilters)) {
+        if (set.has(t[axis])) return false;
+      }
+      return true;
+    }).slice();
+    if (sortState.key) {
+      const k = sortState.key, rank = RANKS[k];
+      rows.sort((a,b) => {
+        const va = a[k]||"", vb = b[k]||"";
+        const ra = rank ? (rank[va] ?? 99) : va;
+        const rb = rank ? (rank[vb] ?? 99) : vb;
+        if (ra < rb) return -1*sortState.dir;
+        if (ra > rb) return  1*sortState.dir;
+        return a.id.localeCompare(b.id);
+      });
+    }
+    let html = "<thead><tr>" + SORT_COLS.map(c => {
+      const arrow = (sortState.key===c.key) ? (sortState.dir>0?" \u25B2":" \u25BC") : "";
+      const isHidden = hiddenCols.has(c.key);
+      const baseCls = c.sortable ? 'sortable' : '';
+      const cls = `${baseCls}${isHidden ? ' col-hidden' : ''}`.trim();
+      const sym = isHidden ? "+" : "\u2212"; // \u2212 minus
+      const inner = isHidden
+        ? `<span class="col-toggle" data-col="${c.key}" title="Mostra colonna">${sym}</span>`
+        : `<span class="col-label" data-col="${c.key}">${c.label}${arrow}</span><span class="col-toggle" data-col="${c.key}" title="Nascondi colonna">${sym}</span>`;
+      return `<th class="${cls}" data-key="${c.key}">${inner}</th>`;
+    }).join("") + "</tr></thead><tbody>";
+    // Colori RGB per dev_status. Pieno per la porzione progress, faded
+    // (alpha 0.30) per il resto: cosi' la cella conserva il colore
+    // identificativo dello stato anche a progress 0%.
+    const DEV_RGB = {
+      done:    [46,125,50],
+      open:    [129,199,132],
+      pending: [239,154,154],
+      blocked: [198,40,40],
+      backlog: [207,216,220],
+      idea:    [84,110,122]
+    };
+    const cellByKey = (key, tdInner, extraCls="", extraStyle="") => {
+      const hide = hiddenCols.has(key) ? ' col-hidden' : '';
+      const cls = (extraCls + hide).trim();
+      const style = extraStyle ? ` style="${extraStyle}"` : "";
+      return `<td class="${cls}" data-col="${key}"${style}>${tdInner}</td>`;
+    };
+    for (const t of rows) {
+      const pct = (typeof t.progress==='number'?t.progress:0);
+      const c = DEV_RGB[t.dev_status] || [70,70,70];
+      const full = `rgb(${c[0]},${c[1]},${c[2]})`;
+      const faded = `rgba(${c[0]},${c[1]},${c[2]},0.30)`;
+      const grad = `background: linear-gradient(90deg, ${full} 0%, ${full} ${pct}%, ${faded} ${pct}%, ${faded} 100%);`;
+      const conflictHtml = (Array.isArray(t.conflicts) && t.conflicts.length)
+        ? ` <span class="conflict-badge" title="${t.conflicts.join(' | ').replace(/"/g,'&quot;')}">⚠ ${t.conflicts.length}</span>`
+        : "";
+      html += `<tr data-id="${t.id}">`
+        + cellByKey("id",          `<b>${t.id}</b>${conflictHtml}`)
+        + cellByKey("tipo",        t.tipo||"", `tipo-${t.tipo}`)
+        + cellByKey("descrizione", (t.descrizione||t.name||""), "desc")
+        + cellByKey("owner",       ownerCellHtml(t.owner, true))
+        + cellByKey("importanza",  t.importanza||"", `imp-${t.importanza}`)
+        + cellByKey("criticita",   t.criticita||"", `crit-${t.criticita}`)
+        + cellByKey("stato",       t.stato||"", `sta-${t.stato}`)
+        + cellByKey("dependencies", t.dependencies||"")
+        + cellByKey("dev_status",  `${t.dev_status||""} <span class="dev-pct">${pct}%</span>`, `dev-${t.dev_status}`, grad)
+        + `</tr>`;
+    }
+    syn.innerHTML = html + "</tbody>";
+    // Sort: click sulla label (NON sul toggle +/−)
+    syn.querySelectorAll('th.sortable .col-label').forEach(lab => {
+      lab.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const k = lab.dataset.col;
+        if (sortState.key === k) sortState.dir *= -1;
+        else { sortState.key = k; sortState.dir = 1; }
+        renderSyn();
+      });
+    });
+    // Toggle hide/show colonna: click su + / −
+    syn.querySelectorAll('th .col-toggle').forEach(t => {
+      t.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const k = t.dataset.col;
+        if (hiddenCols.has(k)) hiddenCols.delete(k); else hiddenCols.add(k);
+        renderSyn();
+      });
+    });
+    syn.querySelectorAll('tbody tr').forEach(tr => {
+      tr.addEventListener('click', (ev) => {
+        // stopPropagation evita race con il doc-level handler che resetta
+        // selectedId quando ev.target diventa orfano dopo renderSyn().
+        ev.stopPropagation();
+        const id = tr.dataset.id;
+        selectedId = (selectedId === id) ? null : id;
+        renderSyn();
+        applyGanttFilters();
+      });
+      if (tr.dataset.id === selectedId) tr.classList.add('selected');
+    });
+  }
+
+  let selectedId = null;
+  const hiddenStatuses = new Set();
+  let hideProgress = false;
+
+  function applyGanttFilters() {
+    document.querySelectorAll('#gantt .bar-wrapper').forEach(el => {
+      el.classList.remove('hidden-status','dimmed','selected','hide-progress');
+      const id = el.dataset.id;
+      const task = allTasks.find(t => t.id === id);
+      const status = task ? (task.status || 'wait') : 'wait';
+      if (hiddenStatuses.has(status)) el.classList.add('hidden-status');
+      if (hideProgress) el.classList.add('hide-progress');
+      if (selectedId) {
+        if (id === selectedId) el.classList.add('selected');
+        else el.classList.add('dimmed');
+      }
+    });
+  }
+
+  renderSyn();
+
+  function buildVisible() {
+    const visible = [];
+    for (const t of allTasks) {
+      if (!isVisible(t)) continue;
+      const isParent = hasChildren(t.id);
+      const prefix = isParent ? (expanded.has(t.id) ? "\u25BC  " : "\u25B6  ") : "   ";
+      const label = t.descrizione ? `${t.id} — ${t.descrizione}` : (t.name||t.id);
+      visible.push({
+        id: t.id,
+        name: prefix + label,
+        start: t.start,
+        end: t.end,
+        progress: t.progress || 0,
+        dependencies: t.dependencies || "",
+        custom_class: `status-${t.status || 'wait'}`,
+        _isParent: isParent,
+        _origId: t.id
+      });
+    }
+    return visible;
+  }
+
+  let gantt;
+  function render() {
+    try {
+      const visible = buildVisible();
+      const host = document.getElementById('gantt-container');
+      const savedLeft = host.scrollLeft, savedTop = host.scrollTop;
+      host.innerHTML = '<svg id="gantt"></svg>';
+      const GanttCtor = window.Gantt || (window.frappeGantt && window.frappeGantt.default) || window.frappeGantt;
+      if (!GanttCtor) throw new Error("frappe-gantt non caricato dalla CDN");
+      gantt = new GanttCtor("#gantt", visible, {
+        view_mode: 'Day',
+        on_click: task => {
+          if (task._isParent) {
+            if (expanded.has(task._origId)) expanded.delete(task._origId);
+            else expanded.add(task._origId);
+            render();
+          }
+        },
+        on_date_change: () => { render(); },
+        on_progress_change: () => { render(); }
+      });
+      visible.forEach(v => {
+        if (v._isParent) {
+          const el = document.querySelector(`.bar-wrapper[data-id="${v.id}"]`);
+          if (el) el.classList.add('is-parent');
+        }
+      });
+      // v2: overlay avatar Gravatar a sinistra di ogni bar
+      visible.forEach(v => {
+        const task = allTasks.find(x => x.id === v.id);
+        if (!task || !task.owner) return;
+        const wrap = document.querySelector(`.bar-wrapper[data-id="${v.id}"]`);
+        if (!wrap) return;
+        const bar = wrap.querySelector('.bar');
+        if (!bar) return;
+        const bx = parseFloat(bar.getAttribute('x')) || 0;
+        const by = parseFloat(bar.getAttribute('y')) || 0;
+        const bh = parseFloat(bar.getAttribute('height')) || 20;
+        const size = Math.min(bh, 20);
+        const ax = bx - size - 4;
+        const ay = by + (bh - size) / 2;
+        const svgNs = "http://www.w3.org/2000/svg";
+        const img = document.createElementNS(svgNs, 'image');
+        img.setAttribute('href', gravatarUrl(task.owner, 44));
+        img.setAttribute('x', ax);
+        img.setAttribute('y', ay);
+        img.setAttribute('width', size);
+        img.setAttribute('height', size);
+        img.setAttribute('clip-path', 'circle()');
+        img.setAttribute('class', 'gantt-owner-avatar');
+        const titleEl = document.createElementNS(svgNs, 'title');
+        const info = ownerInfo(task.owner);
+        titleEl.textContent = `${info.name} (${info.team}) — ${task.owner}`;
+        img.appendChild(titleEl);
+        wrap.appendChild(img);
+        // Bandiera conflitto: ⚠ rosso sopra la barra
+        if (Array.isArray(task.conflicts) && task.conflicts.length) {
+          const warn = document.createElementNS(svgNs, 'text');
+          warn.setAttribute('x', bx + 4);
+          warn.setAttribute('y', by - 4);
+          warn.setAttribute('font-size', '14');
+          warn.setAttribute('fill', '#e74c3c');
+          warn.setAttribute('font-weight', '700');
+          warn.textContent = '⚠';
+          const wt = document.createElementNS(svgNs, 'title');
+          wt.textContent = task.conflicts.join(' | ');
+          warn.appendChild(wt);
+          wrap.appendChild(warn);
+        }
+      });
+      requestAnimationFrame(() => { host.scrollLeft = savedLeft; host.scrollTop = savedTop; applyGanttFilters(); });
+      document.getElementById('gantt-error').textContent = '';
+    } catch (e) {
+      document.getElementById('gantt-error').textContent = 'Errore Gantt: ' + e.message;
+      console.error(e);
+    }
+  }
+  render();
+
+  document.querySelectorAll('.swatch.toggle').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const s = sw.dataset.status;
+      if (s === 'progress') {
+        hideProgress = !hideProgress;
+        sw.classList.toggle('off', hideProgress);
+      } else {
+        if (hiddenStatuses.has(s)) hiddenStatuses.delete(s); else hiddenStatuses.add(s);
+        sw.classList.toggle('off', hiddenStatuses.has(s));
+      }
+      applyGanttFilters();
+    });
+  });
+
+  // v2: popola chip Owner dinamicamente da OWNERS registry
+  (function populateOwnerChips() {
+    const wrap = document.getElementById('owner-legend');
+    if (!wrap) return;
+    // unique owner emails dalla lista task (non solo registry, per coprire eventuali "ext")
+    const seen = new Set();
+    allTasks.forEach(t => { if (t.owner) seen.add(t.owner); });
+    const emails = Array.from(seen).sort();
+    for (const email of emails) {
+      const info = ownerInfo(email);
+      const url = gravatarUrl(email, 28);
+      const chip = document.createElement('span');
+      chip.className = 'syn-chip toggle owner-chip team-' + (info.team || 'ext');
+      chip.dataset.axis = 'owner';
+      chip.dataset.val = email;
+      chip.title = email;
+      chip.innerHTML = `<img src="${url}" alt=""/> ${info.name}`;
+      wrap.appendChild(chip);
+    }
+  })();
+
+  // v2: filter axis che richiedono anche rebuild gantt (non solo sinottica)
+  // Stato/dev_status sono già gestiti da applyGanttFilters; owner/team richiedono buildVisible filtering.
+  // Modifichiamo buildVisible per rispettare hiddenFilters su owner + owner_team.
+  const _origBuildVisible = buildVisible;
+  buildVisible = function() {
+    const base = _origBuildVisible();
+    return base.filter(v => {
+      const t = allTasks.find(x => x.id === v.id);
+      if (!t) return true;
+      if (hiddenFilters.owner.has(t.owner)) return false;
+      if (hiddenFilters.owner_team.has(t.owner_team)) return false;
+      // Anche tipo/imp/crit/stato/dev_status per coerenza (originale li applicava solo a sinottica)
+      if (hiddenFilters.tipo.has(t.tipo)) return false;
+      if (hiddenFilters.importanza.has(t.importanza)) return false;
+      if (hiddenFilters.criticita.has(t.criticita)) return false;
+      if (hiddenFilters.stato.has(t.stato)) return false;
+      if (hiddenFilters.dev_status.has(t.dev_status)) return false;
+      return true;
+    });
+  };
+
+  // Chip categoria sinottica → toggle filtro per asse. v2: rebuild anche gantt.
+  document.addEventListener('click', (ev) => {
+    const chip = ev.target.closest('.syn-chip.toggle');
+    if (!chip) return;
+    ev.stopPropagation();
+    const axis = chip.dataset.axis;
+    const val = chip.dataset.val;
+    const set = hiddenFilters[axis];
+    if (!set) return;
+    if (set.has(val)) set.delete(val); else set.add(val);
+    chip.classList.toggle('off', set.has(val));
+    renderSyn();
+    render(); // rebuild gantt to apply owner/team filters
+  });
+
+  // Deselect su click fuori dalla tabella sinottica + gantt → esce da isolation
+  document.addEventListener('click', (ev) => {
+    if (!selectedId) return;
+    const t = ev.target;
+    if (t.closest && (t.closest('table.synoptic tbody tr') || t.closest('#gantt'))) return;
+    selectedId = null;
+    renderSyn();
+    applyGanttFilters();
+  });
+
+  // Toggle espandi/comprimi tutti i task padri
+  const btnToggleAll = document.getElementById('toggle-all-tree');
+  if (btnToggleAll) {
+    btnToggleAll.addEventListener('click', () => {
+      const parents = allTasks.filter(t => hasChildren(t.id)).map(t => t.id);
+      const allExpanded = parents.every(id => expanded.has(id));
+      if (allExpanded) {
+        parents.forEach(id => expanded.delete(id));
+        btnToggleAll.textContent = '⊟ Espandi tutto';
+      } else {
+        parents.forEach(id => expanded.add(id));
+        btnToggleAll.textContent = '⊞ Comprimi tutto';
+      }
+      render();
+    });
+  }
+
+  const btn = document.getElementById('refresh');
+  btn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText('sync_todo'); } catch (e) {}
+    btn.classList.add('copied');
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => { btn.classList.remove('copied'); toast.classList.remove('show'); }, 1800);
+  });
+
+</script>
+</body>
+</html>
