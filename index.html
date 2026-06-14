@@ -266,7 +266,7 @@
 <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
 <script id="todo-data" type="application/json">
 {
-  "last_sync": "2026-06-13T19:20",
+  "last_sync": "2026-06-14",
   "token_daily_avg_k": null,
   "owners": {
     "daniele@tyfoam.dev": {
@@ -740,10 +740,10 @@
       "criticita": "Alta",
       "stato": "Now",
       "dev_status": "open",
-      "descrizione": "MRF turbine non implementato: TURB_F/TURB_R sono simulate come wall statici (manca MRFProperties + cellZone via topoSet). Implementare zone rotanti reali per CFD turbina corretto",
+      "descrizione": "MRF turbine non implementato: TURB_F/TURB_R sono simulate come wall statici (manca MRFProperties + cellZone via topoSet). Implementare zone rotanti reali per CFD turbina corretto [2026-06-14] WIP Stage 1/3: params 'turbines' (center/axis/radius/omega) scritti in Core.ms (deploy startup, serve restart Max). Stage 2 (MRFProperties+topoSetDict in setup.py) + Stage 3 (topoSet in pipeline) pending. Spec: TF-030_MRF_spec.md.",
       "start": "2026-06-19",
       "end": "2026-06-21",
-      "progress": 0,
+      "progress": 33,
       "status": "wip",
       "owner": "daniele@tyfoam.dev",
       "owner_team": "tyfoam"
