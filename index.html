@@ -983,6 +983,52 @@
       "dependencies": "TF-051",
       "owner": "daniele@tyfoam.dev",
       "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-054",
+      "tipo": "Feature",
+      "importanza": "Alta",
+      "criticita": "Media",
+      "stato": "Next",
+      "dev_status": "done",
+      "descrizione": "Transient warm-start (2 step): step1 simpleFoam steady -> campo sviluppato; step2 pimpleFoam con startFrom latestTime usa il campo steady come condizione iniziale. Le instabilita' di scia emergono in pochi flow-through invece di ~10-20s da cold-start -> transient fattibile in ore non giorni. setup genera entrambi i set di dict; watcher orchestra simpleFoam->switch dict->pimpleFoam. E' il modo pratico di ottenere Cl mediato affidabile (completa TF-053).",
+      "start": "2026-06-20",
+      "end": "2026-06-25",
+      "progress": 100,
+      "status": "wait",
+      "dependencies": "TF-053",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-055",
+      "tipo": "Feature",
+      "importanza": "Media",
+      "criticita": "Bassa",
+      "stato": "Now",
+      "dev_status": "done",
+      "descrizione": "Progress transient-aware: ResidualParser conta iterazioni intere (simpleFoam) -> con pimpleFoam (Time=secondi) la barra resta ferma e il log non segue. Rendere il parser transient-aware (progress = Time/endTime, messaggio pimpleFoam t/endTime) + agganciare un monitor alla fase 2 warm-start (ora assente). File: tyfoam_watcher.py (ResidualParser + blocco warm-start).",
+      "start": "2026-06-16",
+      "end": "2026-06-17",
+      "progress": 100,
+      "status": "wait",
+      "dependencies": "TF-054",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-056",
+      "tipo": "Feature",
+      "importanza": "Media",
+      "criticita": "Bassa",
+      "stato": "Now",
+      "dev_status": "done",
+      "descrizione": "Agente transient-aware: parse_forces legge coefficient*.dat transient (coefficient_0.dat da restart pimpleFoam); parse_convergence preferisce log pimpleFoam + verdetto transient (converged=True time-averaged, no falso INCONCLUSIVE steady). Completa la catena transient TF-053/054.",
+      "start": "2026-06-15",
+      "end": "2026-06-15",
+      "progress": 100,
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
     }
   ]
 }
