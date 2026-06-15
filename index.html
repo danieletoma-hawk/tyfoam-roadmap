@@ -922,6 +922,67 @@
       "dependencies": "TF-047",
       "owner": "daniele@tyfoam.dev",
       "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-050",
+      "tipo": "Feature",
+      "importanza": "Alta",
+      "criticita": "Alta",
+      "stato": "Now",
+      "dev_status": "open",
+      "descrizione": "Auto HARD PAUSE su eventi di sistema che perderebbero una sim WIP (laptop): batteria sotto soglia sicurezza (default 20%, env TYFOAM_BATT_PAUSE_PCT) o flag critico, riavvio Windows Update pendente (registry RebootRequired), sospensione/ibernazione/standby + shutdown/restart (WM_POWERBROADCAST/PBT_APMSUSPEND + WM_QUERYENDSESSION). Riusa il checkpoint hard-pause manuale; visibile in Panel (bottone viola + status 'HARD PAUSE AUTO: motivo'). Delegato codegen via Automator.",
+      "start": "2026-06-15",
+      "end": "2026-06-17",
+      "progress": 90,
+      "status": "wait",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-051",
+      "tipo": "Bug",
+      "importanza": "Alta",
+      "criticita": "Alta",
+      "stato": "Now",
+      "dev_status": "done",
+      "descrizione": "Robustezza convergenza/anti-falso-positivo: il verdetto usa il residuo dell'ULTIMA iter (single-sample) -> in ciclo-limite un dip casuale sotto 1e-5 falserebbe 'converged'. Passare a media finestra ultime N iter + gate su ampiezza oscillazione Cd (ultimo 20%); distinguere ciclo-limite (residui plateau SOPRA target -> piu' iter inutili) da convergenza lenta. Marca INCONCLUSIVO con messaggio corretto. File: tyfoam_agent.py (analyze_convergence). Trovato analizzando 3 run SHELL_prova identiche: Cd ripetibile 0.2%, Cl non-convergente (ciclo limite, osc +-15-30%).",
+      "start": "2026-06-16",
+      "end": "2026-06-18",
+      "progress": 100,
+      "status": "wait",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-052",
+      "tipo": "Feature",
+      "importanza": "Alta",
+      "criticita": "Media",
+      "stato": "Now",
+      "dev_status": "done",
+      "descrizione": "Integrita' risultati (anti-alterazione casuale): .tyfoam_done e _analysis.json sono testo semplice world-writable in C:\\TyFOAM_exchange, nessun hash/lock. Aggiungere sidecar SHA-256 (e HMAC opzionale via env TYFOAM_INTEGRITY_KEY) generato a fine run + funzione verify_integrity che rileva modifiche manuali. File: tyfoam_watcher.py (write_status_flag) + tyfoam_agent.py (save_analysis_json).",
+      "start": "2026-06-16",
+      "end": "2026-06-18",
+      "progress": 100,
+      "status": "wait",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-053",
+      "tipo": "Feature",
+      "importanza": "Alta",
+      "criticita": "Media",
+      "stato": "Next",
+      "dev_status": "done",
+      "descrizione": "Modalita' transient per Cl affidabile su scie instabili (ciclo-limite). pimpleFoam + fieldAverage + forceCoeffs time-averaging su finestra post-transitorio -> Cd/Cl mediati nel tempo + banda. NO rigidBody/AMI (sottoinsieme del transient di TF-041, indipendente dallo stack turbine). Attivabile manualmente o auto quando steady marca limit_cycle (TF-051). File: setup.py (controlDict pimpleFoam + fvSchemes ddt + fieldAverage), watcher.py (run pimpleFoam in questa modalita'), UI mode-selector (overlap TF-048).",
+      "start": "2026-06-19",
+      "end": "2026-06-24",
+      "progress": 100,
+      "status": "wait",
+      "dependencies": "TF-051",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
     }
   ]
 }
