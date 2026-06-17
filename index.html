@@ -1029,6 +1029,38 @@
       "progress": 100,
       "owner": "daniele@tyfoam.dev",
       "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-057",
+      "tipo": "Bug",
+      "importanza": "Alta",
+      "criticita": "Media",
+      "stato": "Now",
+      "dev_status": "open",
+      "descrizione": "RESUME non riprende dopo HARD PAUSE automatico (TF-050 batteria): premendo Play la sim non riparte. Path invariato: Play->tyfoam_resumeCase->cli cmd_resume_case (patch controlDict startFrom=latestTime + stopAt=endTime, deposita .tyfoam_resume in EXCHANGE/cases)->watcher rileva e riprende (resume=True). PRIMA VERIFICA con daemon FRESCO (i test avevano daemon instabile dopo recovery WSL ripetuti -> il comando resume poteva non essere consumato). Se persiste: controllare (1) .tyfoam_resume consumato dal watcher, (2) _paused_case nel panel dopo auto-pausa, (3) checkpoint latestTime effettivamente scritto dalla pausa (stopAt=writeNow deve raggiungere un write). File: tyfoam_cli.sh:357 cmd_resume_case, tyfoam_watcher.py:483 (resume), tyfoam_ui.py toggle_play.",
+      "start": "2026-06-16",
+      "end": "2026-06-18",
+      "progress": 0,
+      "status": "wait",
+      "dependencies": "TF-050",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
+    },
+    {
+      "id": "TF-058",
+      "tipo": "Bug",
+      "importanza": "Media",
+      "criticita": "Bassa",
+      "stato": "Now",
+      "dev_status": "open",
+      "descrizione": "Verifica progress/log fase transient (TF-055/056) con daemon RIAVVIATO: durante fase 2 warm-start (pimpleFoam) il LOG panel deve mostrare '[3b/5] pimpleFoam...' + 'pimpleFoam t=.../endTime', e la progress bar deve crescere (sub_progress=Time/endTime via ResidualParser transient). Nei test il daemon era pre-TF-055 (codice deployato ma non caricato: serve POWER off/on). Se dopo restart persiste -> bug reale nel monitor fase 2 (ResidualParser transient non aggancia solve_log2) o nel ProgressWriter. NB: il LOG panel taila daemon.log; le righe [3b/5] e pimpleFoam t= ci scrivono via log.info. File: tyfoam_watcher.py (ResidualParser + blocco warm-start fase 2).",
+      "start": "2026-06-16",
+      "end": "2026-06-18",
+      "progress": 0,
+      "status": "wait",
+      "dependencies": "TF-055",
+      "owner": "daniele@tyfoam.dev",
+      "owner_team": "tyfoam"
     }
   ]
 }
